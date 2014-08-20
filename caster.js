@@ -1,15 +1,23 @@
 var canvas, canvasContext, buffer, bufferContext;
 var map = [
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 2, 0, 0, 0, 0, 2, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 2, 0, 0, 0, 0, 2, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ];
 
 function Vec2(x, y) {
@@ -81,32 +89,36 @@ function castRay(column, origin, direction) {
   mapX = Math.floor(origin.x);
   mapY = Math.floor(origin.y);
 
-  deltaX = Math.sqrt(1+(direction.y * direction.y) / (direction.x * direction.x));
-  deltaY = Math.sqrt(1+(direction.x * direction.x) / (direction.y * direction.y));
+  distancePerX = Math.sqrt(1 + (direction.y * direction.y) / (direction.x * direction.x));
+  distancePerY = Math.sqrt(1 + (direction.x * direction.x) / (direction.y * direction.y));
   if(direction.x < 0) {
     stepX = -1;
-    sideX = (origin.x - mapX) * deltaX;
+    sideX = (origin.x - mapX) * distancePerX;
   } else {
     stepX = 1;
-    sideX = (mapX + 1 - origin.x) * deltaX;
+    sideX = (mapX + 1 - origin.x) * distancePerX;
   }
   if(direction.y < 0) {
     stepY = -1;
-    sideY = (origin.y - mapY) * deltaY;
+    sideY = (origin.y - mapY) * distancePerY;
   } else {
     stepY = 1;
-    sideY = (mapY + 1 - origin.y) * deltaY;
+    sideY = (mapY + 1 - origin.y) * distancePerY;
   }
+
   hit = 0;
-  while (hit == 0) {
+  while (!hit) {
     if(sideX < sideY) {
-      sideX += deltaX;
+      sideX += distancePerX;
       mapX += stepX;
       side = 0;
     } else {
-      sideY += deltaY;
+      sideY += distancePerY;
       mapY += stepY;
       side = 1;
+    }
+    if(mapX < 0 || mapX > map.length - 1 || mapY < 0 || mapY > map.length - 1) {
+      return
     }
     if(map[mapX][mapY] > 0) {
       hit = 1;
