@@ -20,6 +20,8 @@ var map = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ];
 
+var texture;
+
 function Vec2(x, y) {
   this.x = x;
   this.y = y;
@@ -51,6 +53,10 @@ function Camera(position, direction) {
     this.direction.rotate(angle);
     this.view.rotate(angle);
   }
+}
+
+function loadTexture() {
+  texture = document.getElementById("checker");
 }
 
 function setUp() {
@@ -122,13 +128,24 @@ function castRay(column, origin, direction) {
     }
     if(map[mapX][mapY] > 0) {
       hit = 1;
+      textureID = map[mapX][mapY];
     }
   }
   if(side == 0) {
     wallDist = Math.abs((mapX - origin.x + (1 - stepX) / 2) / direction.x);
+    wallX = origin.y + ((mapX - origin.x + (1.0 - stepX) / 2.0) / direction.x) * direction.y;
+    textureX = (wallX - Math.floor(wallX)) * texture.width;
+
+    if(direction.x > 0)
+        textureX = texture.width - textureX - 1;
   } else {
     wallDist = Math.abs((mapY - origin.y + (1 - stepY) / 2) / direction.y);
+    wallX = origin.x + ((mapY - origin.y + (1.0 - stepY) / 2.0) / direction.y) * direction.x;
+    textureX = (wallX - Math.floor(wallX)) * texture.width;
+    if(direction.y < 0)
+        textureX = texture.width - textureX - 1;
   }
+
   wallHeight = Math.abs(Math.floor(buffer.height / wallDist));
 
   lineTop = -wallHeight / 2 + buffer.height / 2;
@@ -140,12 +157,7 @@ function castRay(column, origin, direction) {
     lineBottom = buffer.height;
   }
 
-  if (side == 1) {
-    bufferContext.fillStyle = "rgb(128, 0, 0)";
-  } else {
-    bufferContext.fillStyle = "rgb(192, 0, 0)";
-  }
-  bufferContext.fillRect(column, lineTop, 1, lineBottom - lineTop);
+  bufferContext.drawImage(texture, textureX, 0, 1, texture.height, column, lineTop, 1, lineBottom - lineTop);
 
 }
 
