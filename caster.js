@@ -171,7 +171,7 @@ function castRay(column, origin, direction) {
     sideY = (mapY + 1 - origin.y) * distancePerY;
   }
 
-  hit = 0;
+  hit = false;
   while (!hit) {
     if(sideX < sideY) {
       sideX += distancePerX;
@@ -186,7 +186,7 @@ function castRay(column, origin, direction) {
       return
     }
     if(map[mapX][mapY] > 0) {
-      hit = 1;
+      hit = true;
       textureID = map[mapX][mapY];
     }
   }
