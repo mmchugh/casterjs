@@ -208,13 +208,7 @@ function castRay(column, origin, direction) {
   wallHeight = Math.abs(Math.floor(buffer.height / wallDist));
 
   lineTop = -wallHeight / 2 + buffer.height / 2;
-  if(lineTop < 0) {
-    lineTop = 0;
-  }
   lineBottom = wallHeight / 2 + buffer.height / 2;
-  if(lineBottom > buffer.height) {
-    lineBottom = buffer.height;
-  }
 
   bufferContext.drawImage(texture, textureX, 0, 1, texture.height, column, lineTop, 1, lineBottom - lineTop);
 
