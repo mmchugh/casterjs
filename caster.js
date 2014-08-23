@@ -49,19 +49,74 @@ function Camera(position, direction) {
   // create a view vector perpendicular to direction
   this.view = new Vec2(-direction.y, direction.x).mult(0.60);
 
+  this.move = function(distance) {
+    this.position = this.position.add(this.direction.mult(distance))
+  }
+
   this.rotate = function(angle) {
     this.direction.rotate(angle);
     this.view.rotate(angle);
   }
 }
 
+function Player(position, direction) {
+  this.camera = new Camera(position, direction);
+  this.movement = {
+      speed: 0.1,
+      forward: 0.0,
+      sideways: 0.0
+  }
+  this.update = function(elapsed) {
+   this.camera.rotate(this.movement.sideways);
+   this.camera.move(this.movement.forward * this.movement.speed)
+  }
+}
+
 function loadTexture() {
-  texture = document.getElementById("checker");
+  texture = document.getElementById("bricks");
+}
+
+function keyboardHandler(ev) {
+  ev.preventDefault();
+  switch(ev.type) {
+    case 'keydown':
+      switch(ev.keyCode) {
+        case 37:
+          player.movement.sideways = -1.0;
+          break;
+        case 39:
+          player.movement.sideways = 1.0;
+          break;
+        case 38:
+          player.movement.forward = 1.0;
+          break;
+        case 40:
+          player.movement.forward = -1.0;
+          break;
+      }
+      break;
+    case 'keyup':
+      switch(ev.keyCode) {
+        case 37:
+          player.movement.sideways = 0.0;
+          break;
+        case 39:
+          player.movement.sideways = 0.0;
+          break;
+        case 38:
+          player.movement.forward = 0.0;
+          break;
+        case 40:
+          player.movement.forward = 0.0;
+          break;
+      }
+      break;
+  }
 }
 
 function setUp() {
   // set up world
-  player = new Camera(new Vec2(5, 4), new Vec2(-1.0, 0.0));
+  player = new Player(new Vec2(5, 4), new Vec2(-1.0, 0.0));
   // set up rendering
   canvas = document.getElementById('render');
   if (canvas.getContext) {
@@ -73,6 +128,10 @@ function setUp() {
   if (buffer.getContext) {
     bufferContext = buffer.getContext('2d')
   }
+
+  document.onkeydown = keyboardHandler;
+  document.onkeyup = keyboardHandler;
+
   // shim layer with setTimeout fallback
   window.requestAnimFrame = (function(){
     return  window.requestAnimationFrame       ||
@@ -87,7 +146,7 @@ function setUp() {
 
 function update() {
   window.requestAnimFrame(update);
-  player.rotate(0.5);
+  player.update(1);
   draw();
 }
 
@@ -170,9 +229,10 @@ function draw() {
   bufferContext.fillRect(0, buffer.height / 2, buffer.width, buffer.height);
 
   //draw walls
+  camera = player.camera
   for(var x=0; x<=buffer.width; x++ ) {
     xRatio = 2 * x / buffer.width - 1;
-    castRay(x, player.position, player.direction.add(player.view.mult(xRatio)));
+    castRay(x, camera.position, camera.direction.add(camera.view.mult(xRatio)));
   }
   canvasContext.drawImage(buffer, 0, 0);
 }
