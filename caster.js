@@ -63,12 +63,28 @@ function Player(position, direction) {
   this.camera = new Camera(position, direction);
   this.movement = {
       speed: 0.1,
+      turnSpeed: 5.0,
       forward: 0.0,
       sideways: 0.0
   }
   this.update = function(elapsed) {
-   this.camera.rotate(this.movement.sideways);
-   this.camera.move(this.movement.forward * this.movement.speed)
+   this.camera.rotate(this.movement.sideways * this.movement.turnSpeed);
+   if(!this.movement.forward)
+     return;
+
+   moveDistance = this.movement.forward * this.movement.speed;
+   moveRay = castRay(this.camera.position, this.camera.direction.mult(this.movement.forward));
+
+   console.log('moveDistance ' + moveDistance + ', ray distance ' + moveRay.distance)
+   if(moveRay.hit && ((Math.abs(moveDistance) + 0.5) > moveRay.distance)) {
+     if(moveDistance > 0) {
+       moveDistance = moveRay.distance - 0.5;
+     } else {
+       moveDistance = -moveRay.distance + 0.5;
+     }
+   }
+
+   this.camera.move(moveDistance)
   }
 }
 
@@ -150,7 +166,7 @@ function update() {
   draw();
 }
 
-function castRay(column, origin, direction) {
+function castRay(origin, direction) {
   mapX = Math.floor(origin.x);
   mapY = Math.floor(origin.y);
 
@@ -183,7 +199,7 @@ function castRay(column, origin, direction) {
       side = 1;
     }
     if(mapX < 0 || mapX > map.length - 1 || mapY < 0 || mapY > map.length - 1) {
-      return
+      return {hit: false}
     }
     if(map[mapX][mapY] > 0) {
       hit = true;
@@ -193,26 +209,38 @@ function castRay(column, origin, direction) {
   if(side == 0) {
     wallDist = Math.abs((mapX - origin.x + (1 - stepX) / 2) / direction.x);
     wallX = origin.y + ((mapX - origin.x + (1.0 - stepX) / 2.0) / direction.x) * direction.y;
-    textureX = (wallX - Math.floor(wallX)) * texture.width;
+    textureX = (wallX - Math.floor(wallX));
 
     if(direction.x > 0)
-        textureX = texture.width - textureX - 1;
+        textureX = 1 - textureX;
   } else {
     wallDist = Math.abs((mapY - origin.y + (1 - stepY) / 2) / direction.y);
     wallX = origin.x + ((mapY - origin.y + (1.0 - stepY) / 2.0) / direction.y) * direction.x;
-    textureX = (wallX - Math.floor(wallX)) * texture.width;
+    textureX = (wallX - Math.floor(wallX));
     if(direction.y < 0)
-        textureX = texture.width - textureX - 1;
+        textureX = 1 - textureX;
   }
 
-  wallHeight = Math.abs(Math.floor(buffer.height / wallDist));
+  return {hit: hit, distance: wallDist, textureID: textureID, portion: textureX};
+}
+
+function drawColumn(column, position, direction) {
+  rayResult = castRay(position, direction);
+
+  if(!rayResult.hit)
+    return;
+
+  wallHeight = Math.abs(Math.floor(buffer.height / rayResult.distance));
 
   lineTop = -wallHeight / 2 + buffer.height / 2;
   lineBottom = wallHeight / 2 + buffer.height / 2;
 
+  textureX = texture.width * rayResult.portion;
+
   bufferContext.drawImage(texture, textureX, 0, 1, texture.height, column, lineTop, 1, lineBottom - lineTop);
 
 }
+
 
 function draw() {
   //draw sky
@@ -226,7 +254,7 @@ function draw() {
   camera = player.camera
   for(var x=0; x<=buffer.width; x++ ) {
     xRatio = 2 * x / buffer.width - 1;
-    castRay(x, camera.position, camera.direction.add(camera.view.mult(xRatio)));
+    drawColumn(x, camera.position, camera.direction.add(camera.view.mult(xRatio)));
   }
   canvasContext.drawImage(buffer, 0, 0);
 }
